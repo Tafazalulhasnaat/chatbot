@@ -1,0 +1,111 @@
+body {
+    background: linear-gradient(120deg, #f5f7fa, #c3cfe2);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+  }
+  
+  .chat-container {
+    width: 100%;
+    max-width: 450px;
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+  }
+  
+  .chat-header {
+    background: #6f42c1;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    font-size: 1.4rem;
+  }
+  
+  .chat-box {
+    flex-grow: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background-color: #f8f9fa;
+    scroll-behavior: smooth;
+  }
+  
+  .message {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-end;
+  }
+  
+  .message.bot {
+    flex-direction: row;
+  }
+  
+  .message.user {
+    flex-direction: row-reverse;
+  }
+  
+  .bubble {
+    padding: 10px 15px;
+    border-radius: 18px;
+    max-width: 70%;
+    word-wrap: break-word;
+  }
+  
+  .bubble.bot {
+    background-color: #e9ecef;
+    color: #212529;
+  }
+  
+  .bubble.user {
+    background-color: #6f42c1;
+    color: white;
+  }
+  
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin: 0 8px;
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .avatar.bot {
+    background-image: url('https://cdn-icons-png.flaticon.com/512/4712/4712109.png');
+  }
+  
+  .avatar.user {
+    background-image: url('https://cdn-icons-png.flaticon.com/512/847/847969.png');
+  }
+  
+  .chat-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+  }
+  
+  .chat-input input {
+    flex-grow: 1;
+    border-radius: 20px 0 0 20px;
+    border: 1px solid #ced4da;
+    padding: 10px 15px;
+    outline: none;
+  }
+  
+  .chat-input button {
+    border: none;
+    background-color: #6f42c1;
+    color: white;
+    border-radius: 0 20px 20px 0;
+    padding: 10px 20px;
+  }
+  
+  .chat-input button:hover {
+    background-color: #5936a3;
+  }
+  

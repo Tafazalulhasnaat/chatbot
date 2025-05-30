@@ -54,6 +54,7 @@
       justify-content: center;
       color: white;
       font-weight: bold;
+      flex-shrink: 0;
     }
     .avatar.user {
       background: #4285f4;
@@ -115,7 +116,7 @@
 </head>
 <body>
   <div class="chat-container">
-    <div class="chat-header">Gemini Chatbot with RAG</div>
+    <div class="chat-header">DotsBit's Chatbot</div>
     <div id="chat-box" class="chat-box"></div>
     <form id="chat-form" class="chat-input">
       <input type="text" id="user-input" placeholder="Type your message..." autocomplete="off" required />
@@ -138,14 +139,14 @@
       input.focus();
 
       const typingIndicator = appendMessage("bot", "Thinking...");
-      
+
       try {
         const response = await fetch("/chat", {
           method: "POST",
           headers: { 
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ question: userMessage }) // ✅ must match FastAPI input
+          body: JSON.stringify({ question: userMessage })
         });
 
         if (!response.ok) {
@@ -154,8 +155,9 @@
 
         const data = await response.json();
         chatBox.removeChild(typingIndicator);
-        const messageDiv = appendMessage("bot", data.answer); // ✅ FastAPI returns 'answer'
-        
+
+        const messageDiv = appendMessage("bot", data.answer);
+
         if (data.sources && data.sources.length > 0) {
           const sourcesDiv = document.createElement("div");
           sourcesDiv.className = "sources";
@@ -175,7 +177,13 @@
 
       const avatar = document.createElement("div");
       avatar.className = `avatar ${sender}`;
-      avatar.textContent = sender === "user" ? "Y" : "B";
+
+      // Explicitly assign avatar initials
+      if (sender === "user") {
+        avatar.textContent = "Y";  // You or User
+      } else {
+        avatar.textContent = "D";  // D for DotsBit or bot name
+      }
 
       const bubble = document.createElement("div");
       bubble.className = `bubble ${sender}`;
@@ -185,7 +193,7 @@
       msgDiv.appendChild(bubble);
       chatBox.appendChild(msgDiv);
       chatBox.scrollTop = chatBox.scrollHeight;
-      
+
       return msgDiv;
     }
   </script>

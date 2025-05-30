@@ -1,9 +1,33 @@
-Welcome to Sunshine Hotel – Your Comfort, Our Priority!
 
- BOOKINGS & CHECK-IN:
-- Check-in starts at 2:00 PM and check-out is by 11:00 AM.
-- Early check-in is subject to availability and may incur additional charges.
-- Guests must present a valid photo ID and credit card upon arrival.
-- Cancellations are free up to 24 hours before check-in.
-- Non-refundable rates are charged in full at the time of booking.
-- Group reservations of 5+ rooms must be confirmed via our events desk.
+Company Name: DotsBit
+
+Tagline: Empowering Digital Experiences with Scalable Mobile Solutions
+
+Company Overview:
+DotsBit is a specialized mobile development agency that crafts high-performing Flutter and FlutterFlow applications for startups, enterprises, and creators. With a proven track record of delivering 30+ apps for both iOS and Android, we prioritize speed, scalability, and pixel-perfect UI/UX. Our team excels in turning ideas into polished, market-ready products using Firebase, Supabase, and modern backend stacks like Node.js.
+
+We’re more than developers — we’re product partners, committed to building, scaling, and supporting your app from MVP to global launch.
+
+About Me: Usman Ali – Founder & Lead Developer at DotsBit
+I'm a Top Rated Upwork freelancer and Expert-Vetted Flutter/FlutterFlow developer with over 6 years of experience building cross-platform apps. My development journey includes:
+- Published 30+ successful apps on App Store and Play Store
+- Specialized in performance optimization, bug fixing, UI/UX polish, and backend development with Firebase, Supabase, and Node.js
+- Mastery in API integrations, RevenueCat for subscriptions, Stripe & PayPal, Google Maps, Graph API, Vimeo, and real-time data workflows
+
+Beyond development, I lead teams, contribute to open-source plugins, and create technical content on LinkedIn and YouTube. My goal is to empower startups and businesses with scalable, intuitive apps that delight users.
+
+Why Choose DotsBit?
+- End-to-End Development: From wireframes to deployment and maintenance
+- Scalable Architecture: Built to grow with your user base
+- Rapid Prototyping: Using FlutterFlow for admin panels & MVPs
+- Tech Expertise: Deep knowledge of Firebase Auth, Firestore, Supabase, and backend automation
+- Client-Focused: Transparent, communicative, and committed to delivering on time
+
+Additional Bio:
+Usman Ali is a seasoned mobile app developer with over 6 years of experience in Flutter and FlutterFlow. He is the founder of DotsBit, a mobile development agency known for delivering feature-rich, scalable applications for both iOS and Android. With a portfolio of 30+ published apps, Usman specializes in performance optimization, bug fixing, clean UI/UX design, and backend integration using Firebase, Supabase, and Node.js.
+
+His core strengths include advanced API integrations, payment system setups (Stripe, PayPal), social logins, Google Maps, and session-based app logic using tools like RevenueCat. He has deep knowledge of building custom widgets, managing FlutterFlow actions, and creating seamless user experiences.
+
+Usman is a Top Rated freelancer on Upwork and an Expert Seller on Fiverr. He has led Flutter teams, contributed to open-source plugins, and regularly shares technical insights through LinkedIn posts and YouTube content. He is also a Firebase and architecture expert who loves helping startups and businesses go from idea to launch with speed and confidence.
+
+Whether you're looking for a developer who can architect a scalable mobile app from scratch or optimize an existing build for better performance and UX, Usman brings both the technical skill and product mindset to deliver impactful results.

@@ -27,7 +27,7 @@ app = FastAPI()
 # Enable CORS for frontend access (adjust origins as needed)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For production, specify frontend URL like ["https://yourdomain.com"]
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,15 +60,31 @@ Question:
     response = model.generate_content(prompt)
     return response.text
 
+# GREETING LAYER
+def get_chat_response(query: str) -> str:
+    greetings = ["hi", "hello", "hey", "salam", "assalamualaikum", "hi dotsbit"]
+    farewells = ["bye", "goodbye", "see you", "talk to you later"]
+    thanks = ["thanks", "thank you", "shukriya", "jazakallah", "thank you so much"]
+
+    cleaned_query = query.strip().lower()
+
+    if cleaned_query in greetings:
+        return "Hello! Welcome to DotsBit. How can I assist you today?"
+    elif cleaned_query in thanks:
+        return "You're welcome! If you have any other questions, feel free to ask."
+    elif cleaned_query in farewells:
+        return "Thank you for chatting with us. Have a great day!"
+    return get_answer(query)
+
 @app.post("/chat")
 async def chat(query: Query):
     """
-    Endpoint to receive a question and return the generated answer.
+    Endpoint to receive a question and return the generated answer or greeting.
     """
     if not query.question.strip():
         return {"error": "No question provided"}
     
-    answer = get_answer(query.question)
+    answer = get_chat_response(query.question)
     return {"answer": answer}
 
 # Optional: serve frontend HTML if placed in 'static' folder

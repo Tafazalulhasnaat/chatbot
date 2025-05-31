@@ -1,4 +1,3 @@
-# main.py
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -47,18 +46,40 @@ def get_context(query: str, k: int = 3) -> str:
 def get_answer(query: str) -> str:
     """
     Generate answer from Gemini 1.5 Flash model using retrieved context.
+    Avoid mentioning context or saying "based on the text".
     """
     context = get_context(query)
-    prompt = f"""Answer the question based on the context below.
+
+    prompt = f"""
+You are a helpful assistant for a company called DotsBit.
+
+Use the context below to answer the user's question. 
+If the answer is not found in the context, respond naturally with:
+"I'm sorry, I don’t have information about that at the moment."
+
+Do not mention the context or documents in your answer.
 
 Context:
 {context}
 
 Question:
 {query}
+
+Answer:
 """
-    response = model.generate_content(prompt)
-    return response.text
+
+    try:
+        response = model.generate_content(prompt)
+        answer = response.text.strip()
+
+        # Fallback if the model returns something empty or irrelevant
+        if not answer or "based on the context" in answer.lower() or "not mentioned" in answer.lower():
+            return "I'm sorry, I don’t have information about that at the moment."
+        return answer
+
+    except Exception as e:
+        print(f"Error generating answer: {e}")
+        return "I'm sorry, something went wrong while generating the answer."
 
 # GREETING LAYER
 def get_chat_response(query: str) -> str:

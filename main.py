@@ -55,17 +55,19 @@ def get_answer(query: str) -> str:
     if not context.strip():
         return "I'm sorry, I don’t have information about that at the moment."
 
-    # Prompt template
+    # Refined prompt for natural tone
     prompt = f"""
-You are a helpful assistant for a company called DotsBit.
+You are a smart and helpful assistant for a company called DotsBit.
 
-Use the context below to answer the user's question. 
-If the answer is not found in the context, respond naturally with:
+Based on the information provided below, answer the user's question clearly and naturally.
+Your tone should be confident and helpful. Only explain when it adds value.
+
+If the answer is not available in the information, respond with:
 "I'm sorry, I don’t have information about that at the moment."
 
-Do not mention the context or documents in your answer.
+Do not mention the context or the documents in your answer.
 
-Context:
+Information:
 {context}
 
 Question:

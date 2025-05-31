@@ -39,17 +39,23 @@ class Query(BaseModel):
 def get_context(query: str, k: int = 3) -> str:
     """
     Retrieve top-k similar documents from vectorstore as context.
+    Return empty string if no documents found.
     """
     docs = vectorstore.similarity_search(query, k=k)
-    return "\n".join([doc.page_content for doc in docs])
+    return "\n".join([doc.page_content for doc in docs]) if docs else ""
 
 def get_answer(query: str) -> str:
     """
-    Generate answer from Gemini 1.5 Flash model using retrieved context.
-    Avoid mentioning context or saying "based on the text".
+    Generate answer using Gemini 1.5 Flash based on the retrieved context.
+    Return a fallback response if context is not found or Gemini fails.
     """
     context = get_context(query)
 
+    # Early fallback if context is empty
+    if not context.strip():
+        return "I'm sorry, I don’t have information about that at the moment."
+
+    # Prompt template
     prompt = f"""
 You are a helpful assistant for a company called DotsBit.
 
@@ -72,7 +78,7 @@ Answer:
         response = model.generate_content(prompt)
         answer = response.text.strip()
 
-        # Fallback if the model returns something empty or irrelevant
+        # Final fallback if model hallucinated or failed
         if not answer or "based on the context" in answer.lower() or "not mentioned" in answer.lower():
             return "I'm sorry, I don’t have information about that at the moment."
         return answer
@@ -81,7 +87,7 @@ Answer:
         print(f"Error generating answer: {e}")
         return "I'm sorry, something went wrong while generating the answer."
 
-# GREETING LAYER
+# GREETING AND INTENT LAYER
 def get_chat_response(query: str) -> str:
     greetings = ["hi", "hello", "hey", "salam", "assalamualaikum", "hi dotsbit"]
     farewells = ["bye", "goodbye", "see you", "talk to you later"]
@@ -95,6 +101,7 @@ def get_chat_response(query: str) -> str:
         return "You're welcome! If you have any other questions, feel free to ask."
     elif cleaned_query in farewells:
         return "Thank you for chatting with us. Have a great day!"
+    
     return get_answer(query)
 
 @app.post("/chat")
@@ -108,7 +115,7 @@ async def chat(query: Query):
     answer = get_chat_response(query.question)
     return {"answer": answer}
 
-# Optional: serve frontend HTML if placed in 'static' folder
+# Serve frontend (if present in /static folder)
 @app.get("/")
 async def root():
     return FileResponse("static/index.html")

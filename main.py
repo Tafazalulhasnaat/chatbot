@@ -13,18 +13,20 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
 from langchain.prompts import PromptTemplate
 
-# Load environment variables
+from typing import Dict
+
+# Step 1: Load environment variables
 load_dotenv()
 
-# Configure Gemini
+# Step 2: Configure Gemini
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", convert_system_message_to_human=True)
 
-# Load FAISS vector store with embeddings
+# Step 3: Load FAISS vector store with embeddings
 embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 vectorstore = FAISS.load_local("vectorstore", embedding, allow_dangerous_deserialization=True)
 
-# Custom prompt for fluent and powerful assistant behavior
+# Step 4: Custom prompt for fluent and professional assistant behavior
 custom_prompt = PromptTemplate.from_template(
     """
     You are DotsBit Assistant — an intelligent, fluent, and highly professional virtual assistant.
@@ -49,20 +51,20 @@ custom_prompt = PromptTemplate.from_template(
     """
 )
 
-# Setup ConversationalRetrievalChain with memory and custom prompt
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-qa_chain = ConversationalRetrievalChain.from_llm(
-    llm=model,
-    retriever=vectorstore.as_retriever(),
-    memory=memory,
-    combine_docs_chain_kwargs={"prompt": custom_prompt},
-    verbose=False
-)
+# Step 5: Maintain memory per session (in-memory dict)
+session_memories: Dict[str, ConversationBufferMemory] = {}
 
-# Initialize FastAPI app
+def get_memory_for_session(session_id: str) -> ConversationBufferMemory:
+    if session_id not in session_memories:
+        session_memories[session_id] = ConversationBufferMemory(
+            memory_key="chat_history", return_messages=True
+        )
+    return session_memories[session_id]
+
+# Step 6: FastAPI setup
 app = FastAPI()
 
-# Enable CORS for frontend access (adjust origins as needed)
+# Step 7: Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -71,12 +73,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Request model for incoming queries
+# Step 8: Define request model
 class Query(BaseModel):
     question: str
 
-# GREETING AND INTENT LAYER
-def get_chat_response(query: str) -> str:
+# Step 9: Greeting and intent handling
+
+def get_chat_response(query: str, qa_chain: ConversationalRetrievalChain) -> str:
     greetings = ["hi", "hello", "hey", "salam", "assalamualaikum", "hi dotsbit"]
     farewells = ["bye", "goodbye", "see you", "talk to you later"]
     thanks = ["thanks", "thank you", "shukriya", "jazakallah", "thank you so much"]
@@ -97,14 +100,25 @@ def get_chat_response(query: str) -> str:
         print(f"Error generating answer: {e}")
         return "I'm sorry, something went wrong while generating the answer."
 
-@app.post("/chat")
-async def chat(query: Query):
+# Step 10: Chat endpoint with session ID
+@app.post("/chat/{session_id}")
+async def chat(session_id: str, query: Query):
     if not query.question.strip():
         return {"error": "No question provided"}
-    answer = get_chat_response(query.question)
+
+    memory = get_memory_for_session(session_id)
+    qa_chain = ConversationalRetrievalChain.from_llm(
+        llm=model,
+        retriever=vectorstore.as_retriever(),
+        memory=memory,
+        combine_docs_chain_kwargs={"prompt": custom_prompt},
+        verbose=False
+    )
+
+    answer = get_chat_response(query.question, qa_chain)
     return {"answer": answer}
 
-# Serve frontend (if present in /static folder)
+# Step 11: Serve frontend from static folder
 @app.get("/")
 async def root():
     return FileResponse("static/index.html")

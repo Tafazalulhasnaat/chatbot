@@ -1,9 +1,11 @@
 fastapi
 uvicorn[standard]
 python-dotenv
+google-generativeai
+firebase-admin
 langchain
 langchain-community
 langchain-google-genai
-google-generativeai
-faiss-cpu
 pydantic
+faiss-cpu
+google-auth

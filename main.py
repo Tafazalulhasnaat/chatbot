@@ -1,70 +1,36 @@
-import os, re, time, inspect
-import json
+import os, re, time
 from typing import List, Dict, Any
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Header
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 import google.generativeai as genai
 
-import firebase_admin
-from firebase_admin import credentials, firestore, auth
-
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationSummaryBufferMemory
+from langchain.memory.summary_buffer import ConversationSummaryBufferMemory
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import BaseMessage
 from langchain.schema import messages_to_dict, messages_from_dict
 
-# ❶ ENV + INITIALISATION
+# ❶ ENV + INITIALIZATION
 load_dotenv()
-
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-FIREBASE_KEY = os.getenv("FIREBASE_KEY")
 
-# ✅ Configure Gemini
-if not GOOGLE_API_KEY:
-    raise Exception("GOOGLE_API_KEY is missing from environment variables.")
 genai.configure(api_key=GOOGLE_API_KEY)
 llm = ChatGoogleGenerativeAI(
     model="gemini-1.5-flash",
     convert_system_message_to_human=True
 )
 
-# ✅ Embedding and vectorstore
 embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 vectorstore = FAISS.load_local("vectorstore", embedding, allow_dangerous_deserialization=True)
 
-# ✅ Firebase Initialization using JSON from ENV
-if not FIREBASE_KEY:
-    raise Exception("FIREBASE_KEY not found in environment variables.")
-
-try:
-    # Convert the JSON string from env to a Python dict
-    firebase_dict = json.loads(FIREBASE_KEY)
-
-    # Create credentials from dict and initialize Firebase app
-    cred = credentials.Certificate(firebase_dict)
-    firebase_admin.initialize_app(cred)
-
-    # Get Firestore client
-    db = firestore.client()
-
-except json.JSONDecodeError as e:
-    raise Exception(f"Invalid FIREBASE_KEY format. Must be valid JSON. Error: {e}")
-except Exception as e:
-    raise Exception(f"Failed to initialize Firebase: {e}")
-
-# ✅ Token expiry leeway for auth grace period
-TOKEN_LEEWAY_SECONDS = 10
-
-
-# ❷ MODELS
+# ❷ MODELS
 class UserProfile(BaseModel):
     name: str = "Friend"
     language: str = "English"
@@ -73,8 +39,8 @@ class UserProfile(BaseModel):
 class Query(BaseModel):
     question: str
 
+# ❸ MEMORY HELPERS
 
-# ❸ MEMORY HELPERS
 def serialize_messages(msgs: List[BaseMessage]) -> List[Dict[str, Any]]:
     return messages_to_dict(msgs)
 
@@ -88,38 +54,27 @@ def get_memory(uid: str, llm_instance: ChatGoogleGenerativeAI) -> ConversationSu
         memory_key="chat_history",
         return_messages=True
     )
-    doc = db.collection("user_memories").document(uid).get()
-    if doc.exists and (hist := doc.to_dict().get("chat_history")):
-        try:
-            mem.chat_memory.messages = deserialize_messages(hist)
-        except Exception as e:
-            print("Memory deserialization failed:", e)
     return mem
 
 def save_memory(uid: str, mem: ConversationSummaryBufferMemory):
-    db.collection("user_memories").document(uid).set(
-        {"chat_history": serialize_messages(mem.chat_memory.messages)}
-    )
-
+    pass  # Firebase removed, nothing to save
 
 # ❹ PROFILE HELPERS
-PROFILE_COLL = db.collection("user_profiles")
+PROFILE_DB: Dict[str, UserProfile] = {}  # Local memory storage
 
 def get_profile(uid: str) -> UserProfile:
-    doc = PROFILE_COLL.document(uid).get()
-    return UserProfile(**doc.to_dict()) if doc.exists else UserProfile()
+    return PROFILE_DB.get(uid, UserProfile())
 
 def save_profile(uid: str, profile: UserProfile):
-    PROFILE_COLL.document(uid).set(profile.dict())
+    PROFILE_DB[uid] = profile
 
-_NAME_RE   = re.compile(r"\b(?:i am|i'm|my name is|call me|this is)\s+([A-Za-z]+)", re.I)
-_LANG_RE   = re.compile(r"\b(?:i speak|my language is|in)\s+([A-Za-z]+)\b", re.I)
-_INT_RE    = re.compile(r"\b(?:i (?:like|love|enjoy)|i'm interested in)\s+([^\.]+)", re.I)
+_NAME_RE = re.compile(r"\b(?:i am|i'm|my name is|call me|this is)\s+([A-Za-z]+)", re.I)
+_LANG_RE = re.compile(r"\b(?:i speak|my language is|in)\s+([A-Za-z]+)\b", re.I)
+_INT_RE = re.compile(r"\b(?:i (?:like|love|enjoy)|i'm interested in)\s+([^\.]+)", re.I)
 
 def extract_profile(msgs: List[BaseMessage], profile: UserProfile) -> UserProfile:
     updated = profile.copy()
     texts = [m.content.lower() for m in msgs if hasattr(m, "content")]
-
     for t in texts:
         if updated.name == "Friend" and (m := _NAME_RE.search(t)):
             updated.name = m.group(1).title()
@@ -131,8 +86,8 @@ def extract_profile(msgs: List[BaseMessage], profile: UserProfile) -> UserProfil
                     updated.interests.append(intr)
     return updated
 
-
 # ❺ PROMPT
+
 def make_prompt(profile: UserProfile) -> PromptTemplate:
     tmpl = f"""
 You are DotsBit Assistant — an intelligent, fluent, and highly professional virtual assistant.
@@ -159,8 +114,7 @@ Answer:
 """
     return PromptTemplate.from_template(tmpl)
 
-
-# ❻ MISC CHAT UTIL
+# ❻ QUICK REPLIES
 GREET = {"hi", "hello", "hey", "salam", "assalamualaikum", "hi dotsbit"}
 FAREWELL = {"bye", "goodbye", "see you", "talk to you later"}
 THANKS = {"thanks", "thank you", "shukriya", "jazakallah", "thank you so much"}
@@ -175,51 +129,21 @@ def quick_reply(txt: str, p: UserProfile) -> str | None:
         return f"Thank you for chatting with us{', ' + p.name if p.name != 'Friend' else ''}. Have a great day!"
     return None
 
-
-# ❼ TOKEN VERIFICATION
-def verify_id_token_with_grace(token: str) -> Dict[str, Any]:
-    sig = inspect.signature(auth.verify_id_token)
-    if "clock_skew" in sig.parameters:
-        return auth.verify_id_token(token, clock_skew=TOKEN_LEEWAY_SECONDS)
-
-    try:
-        return auth.verify_id_token(token)
-    except auth.ExpiredIdTokenError as e:
-        try:
-            import google.auth.jwt as google_jwt
-            claims = google_jwt.decode(token, verify=False)
-            if time.time() - claims.get("exp", 0) <= TOKEN_LEEWAY_SECONDS:
-                return claims
-        except Exception:
-            pass
-        raise e
-
-
-# ❽ FASTAPI APP
+# ❼ FASTAPI APP
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"]
+    allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"]
 )
 
 @app.post("/chat/{user_id}")
-async def chat(user_id: str, query: Query, authorization: str = Header(None)):
+async def chat(user_id: str, query: Query):
     if not query.question.strip():
         raise HTTPException(400, "No question provided")
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(401, "Missing or invalid Authorization header")
 
-    token = authorization.split("Bearer ")[1]
-    try:
-        claims = verify_id_token_with_grace(token)
-        if claims["uid"] != user_id:
-            raise HTTPException(403, "User ID does not match token")
-    except Exception as e:
-        raise HTTPException(401, f"Invalid token: {e}")
+    print("⚠️ Skipping token verification for testing/demo mode")
 
     memory = get_memory(user_id, llm)
     profile = get_profile(user_id)

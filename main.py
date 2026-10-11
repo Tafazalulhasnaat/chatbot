@@ -1,4 +1,6 @@
-import os, re, time
+import os
+import re
+import time
 from typing import List, Dict, Any
 
 from dotenv import load_dotenv
@@ -6,18 +8,20 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+
+# Google Gemini
 import google.generativeai as genai
-
-from langchain_community.vectorstores import FAISS
-from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_classic.chains import ConversationalRetrievalChain
-from langchain.memory.summary_buffer import ConversationSummaryBufferMemory
-from langchain.prompts import PromptTemplate
-from langchain_core.messages import BaseMessage
-from langchain.schema import messages_to_dict, messages_from_dict
+from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
 
-# ❶ ENV + INITIALIZATION
+# LangChain
+from langchain_community.vectorstores import FAISS
+from langchain_classic.chains import ConversationalRetrievalChain
+from langchain_classic.memory import ConversationSummaryBufferMemory
+from langchain_core.prompts import PromptTemplate
+from langchain_core.messages import BaseMessage, messages_to_dict, messages_from_dict
+
+# Environment and initialization
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 

@@ -11,7 +11,7 @@ import google.generativeai as genai
 from langchain_community.vectorstores import FAISS
 from langchain_google_genai.embeddings import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains import ConversationalRetrievalChain
+from langchain_classic.chains import ConversationalRetrievalChain
 from langchain.memory.summary_buffer import ConversationSummaryBufferMemory
 from langchain.prompts import PromptTemplate
 from langchain_core.messages import BaseMessage
